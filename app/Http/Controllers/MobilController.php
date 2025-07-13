@@ -32,56 +32,42 @@ class MobilController extends Controller
         }
     }
 
-    // Store dengan AJAX support
     public function store(Request $request)
-    {
-        try {
-            $request->validate([
-                'name' => 'required|string|max:255|unique:mobils,name',
-                'type' => 'required|string|in:Manual,Matic',
-                'stok' => 'required|integer|min:0',
-            ]);
+{
+    try {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:mobils,name',
+            'type' => 'required|string|in:Manual,Matic',
+            'stok' => 'required|integer|min:0',
+        ]);
 
-            $mobil = Mobil::create([
-                'name' => $request->name,
-                'type' => $request->type,
-                'stok' => $request->stok,
-            ]);
+        $mobil = Mobil::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'stok' => $request->stok,
+        ]);
 
-            // Jika request AJAX
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $mobil,
-                    'message' => 'Mobil berhasil ditambahkan!'
-                ]);
-            }
-
-            // Jika request biasa
-            return redirect()->route('mobil.index')->with('success', 'Mobil berhasil ditambahkan!');
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validasi gagal',
-                    'errors' => $e->errors()
-                ], 422);
-            }
-            
-            return back()->withErrors($e->errors())->withInput();
-            
-        } catch (\Exception $e) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal menambahkan mobil: ' . $e->getMessage()
-                ], 500);
-            }
-            
-            return back()->with('error', 'Gagal menambahkan mobil!')->withInput();
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $mobil,
+            'message' => 'Mobil berhasil ditambahkan!'
+        ]);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menambahkan mobil: ' . $e->getMessage()
+        ], 500);
     }
+}
+
     
     public function update(Request $request, $id)
     {

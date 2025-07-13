@@ -9,7 +9,7 @@
     <div class="container mx-auto mt-4 bg-white p-6 rounded-lg shadow-lg">
 
         <!-- Button Tambah Mobil -->
-        <div class="mb-6">
+        <div class="mb-6 flex justify-between items-center">
             <button id="addCarButton"
                 class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -18,6 +18,17 @@
                         clip-rule="evenodd" />
                 </svg>
                 Tambah Mobil
+            </button>
+
+            <button id="refreshButton"
+                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                        clip-rule="evenodd" />
+                </svg>
+                Refresh
             </button>
         </div>
 
@@ -116,10 +127,10 @@
                         class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-lg transition duration-150 font-medium">
                         <span id="submitText">Tambah Mobil</span>
                         <span id="submitLoading" class="hidden">
-                            <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
+                            <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                    stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor"
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                 </path>
@@ -208,7 +219,8 @@
     <script>
         // Global variables
         let mobilsData = [];
-        const csrfToken = '{{ csrf_token() }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+            '{{ csrf_token() }}';
 
         // DOM ready
         document.addEventListener('DOMContentLoaded', function() {
@@ -225,8 +237,18 @@
         function loadMobils() {
             showLoading(true);
 
-            fetch('{{ route('mobil.api') }}')
-                .then(response => response.json())
+            fetch('{{ route('mobil.api') }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         mobilsData = data.data;
@@ -379,11 +401,16 @@
                     },
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         closeAddModal();
-                        loadMobils(); // Reload data
+                        loadMobils(); // Reload data after adding a new car
                         showSuccessAlert(data.message);
                     } else {
                         if (data.errors) {
@@ -423,7 +450,12 @@
                         return formData;
                     })()
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         closeEditModal();
@@ -480,7 +512,12 @@
                         'Content-Type': 'application/json',
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         loadMobils(); // Reload data
@@ -526,29 +563,26 @@
         }
 
         function clearForm(formId) {
-            document.getElementById(formId).reset();
+            const form = document.getElementById(formId);
+            form.reset();
         }
 
-        function clearErrors(fields, prefix = '') {
-            fields.forEach(field => {
-                const errorId = prefix ? `${prefix}${field.charAt(0).toUpperCase() + field.slice(1)}Error` :
-                    `${field}Error`;
-                const errorEl = document.getElementById(errorId);
-                if (errorEl) {
-                    errorEl.classList.add('hidden');
-                    errorEl.textContent = '';
+        function clearErrors(fieldNames, prefix = '') {
+            fieldNames.forEach(fieldName => {
+                const errorElement = document.getElementById(`${prefix}${fieldName}Error`);
+                if (errorElement) {
+                    errorElement.classList.add('hidden');
+                    errorElement.textContent = '';
                 }
             });
         }
 
         function showValidationErrors(errors, prefix = '') {
-            Object.keys(errors).forEach(field => {
-                const errorId = prefix ? `${prefix}${field.charAt(0).toUpperCase() + field.slice(1)}Error` :
-                    `${field}Error`;
-                const errorEl = document.getElementById(errorId);
-                if (errorEl && errors[field].length > 0) {
-                    errorEl.textContent = errors[field][0];
-                    errorEl.classList.remove('hidden');
+            Object.keys(errors).forEach(fieldName => {
+                const errorElement = document.getElementById(`${prefix}${fieldName}Error`);
+                if (errorElement) {
+                    errorElement.textContent = errors[fieldName][0];
+                    errorElement.classList.remove('hidden');
                 }
             });
         }
@@ -591,18 +625,9 @@
                 '"': '&quot;',
                 "'": '&#039;'
             };
-            return text.toString().replace(/[&<>"']/g, function(m) {
+            return text.replace(/[&<>"']/g, function(m) {
                 return map[m];
             });
         }
-
-        // Handle session messages (jika ada)
-        @if (session('success'))
-            showSuccessAlert({!! json_encode(session('success')) !!});
-        @endif
-
-        @if (session('error'))
-            showErrorAlert({!! json_encode(session('error')) !!});
-        @endif
     </script>
 </x-app-layout>
