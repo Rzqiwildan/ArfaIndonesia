@@ -83,7 +83,7 @@ class BookingController extends Controller
             $message .= "*Catatan Khusus:* {$request->special_notes}\n";
         }
         
-        $whatsappUrl = "https://wa.me/6285225323686?text=" . urlencode($message);
+        $whatsappUrl = "https://wa.me/6281316413586?text=" . urlencode($message);
 
         return redirect()->away($whatsappUrl);
     }
