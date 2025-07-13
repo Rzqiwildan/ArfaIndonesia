@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\AdminBookingController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MobilController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Route utama menggunakan controller
-Route::get('/', [BookingController::class, 'index'])->name('home');
+Route::get('/', [BookingController::class, 'index'])->name('form-booking');
+Route::post('/booking/submit', [BookingController::class, 'submitForm'])->name('booking.submit');
 
 Route::get('/dashboard', function () {
     return view('admin/dashboard');
@@ -30,6 +32,16 @@ Route::middleware('auth')->group(function () {
 
 // Route untuk mobil (tambahkan di web.php)
 Route::prefix('admin')->middleware('auth')->group(function () {
+     // Dashboard routes
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('admin.dashboard.data');
+    Route::get('/dashboard/live-stats', [DashboardController::class, 'getLiveStats'])->name('admin.dashboard.live-stats');
+    Route::get('/dashboard/booking-stats', [DashboardController::class, 'getBookingStats'])->name('admin.dashboard.booking-stats');
+    Route::get('/dashboard/car-stats', [DashboardController::class, 'getCarStats'])->name('admin.dashboard.car-stats');
+    Route::get('/dashboard/recent-bookings', [DashboardController::class, 'getRecentBookings'])->name('admin.dashboard.recent-bookings');
+    Route::get('/dashboard/alerts', [DashboardController::class, 'getAlerts'])->name('admin.dashboard.alerts');
+    
+    
     // Route untuk halaman mobil (yang sudah ada)
     Route::get('/mobil', [MobilController::class, 'index'])->name('mobil.index');
     Route::get('/mobil/api', [MobilController::class, 'getMobils'])->name('mobil.api');
@@ -45,5 +57,4 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::get('/booking/{id}', [AdminBookingController::class, 'show'])->name('admin.booking.show');
 });
 
-Route::post('/form-booking', [BookingController::class, 'submitForm'])->name('form.submit');
 require __DIR__.'/auth.php';

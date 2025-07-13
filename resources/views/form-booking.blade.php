@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulir Rental Mobil</title>
-    <link rel="shortcut icon" href="{{ asset('images/ArfaIndonesia.png') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('ArfaIndonesia.png') }}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .form-section {
@@ -157,6 +157,27 @@
         .car-info.show {
             display: block;
         }
+
+        .transmission-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .transmission-manual {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .transmission-matic {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
     </style>
 </head>
 
@@ -167,7 +188,7 @@
             <div class="form-section">
                 <h2 class="section-title">Formulir Pemesanan</h2>
 
-                <form action="{{ route('form.submit') }}" method="POST" id="rentalForm">
+                <form action="{{ route('booking.submit') }}" method="POST" id="rentalForm">
                     @csrf
                     <div class="form-group">
                         <label class="form-label">Nama Lengkap</label>
@@ -190,7 +211,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Pilihan Mobil</label>
-                        <select class="form-select" id="pilihanMobil" name="mobil_id" required>
+                        <select class="form-select rounded-sm" id="pilihanMobil" name="mobil_id" required>
                             <option value="">Pilih Mobil</option>
                             @foreach ($mobils as $mobil)
                                 <option value="{{ $mobil->id }}" data-type="{{ $mobil->type }}">
@@ -199,8 +220,10 @@
                             @endforeach
                         </select>
                         <div id="carInfo" class="car-info">
-                            <p><strong>Tipe Transmisi:</strong> <span id="carType"></span></p>
-                            <p><strong>Stok Tersedia:</strong> <span id="carStock"></span></p>
+                            <p class="flex items-center">
+                                <strong class="mr-2">Tipe Transmisi:</strong> 
+                                <span id="carTypeBadge" class="transmission-badge"></span>
+                            </p>
                         </div>
                     </div>
 
@@ -307,12 +330,22 @@
         document.getElementById('pilihanMobil').addEventListener('change', function() {
             const selectedCarId = this.value;
             const carInfo = document.getElementById('carInfo');
+            const carTypeBadge = document.getElementById('carTypeBadge');
             
             if (selectedCarId) {
                 const selectedCar = mobils.find(car => car.id == selectedCarId);
                 if (selectedCar) {
-                    document.getElementById('carType').textContent = selectedCar.type;
-                    document.getElementById('carStock').textContent = selectedCar.stok;
+                    // Set transmission type with appropriate styling
+                    carTypeBadge.textContent = selectedCar.type;
+                    
+                    // Remove existing classes and add appropriate ones
+                    carTypeBadge.className = 'transmission-badge';
+                    if (selectedCar.type === 'Manual') {
+                        carTypeBadge.classList.add('transmission-manual');
+                    } else if (selectedCar.type === 'Matic') {
+                        carTypeBadge.classList.add('transmission-matic');
+                    }
+                    
                     carInfo.classList.add('show');
                 }
             } else {
